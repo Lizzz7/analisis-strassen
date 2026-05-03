@@ -228,51 +228,67 @@ int main(void) {
   printf("Multiplicacion clasica vs Strassen\n");
   printf("n tiempo_us strassen_us\n");
 
-  int sizes[] = { 2, 4, 8, 16, 32, 48, 64, 96, 128, 192, 256, 384, 512 };
+  int sizes[] = {
+    2, 4, 8,
+    16, 20, 24, 28,        /* antes de 32              */
+    32,                    /* umbral sugerido MIT       */
+    36, 40, 44, 48,        /* justo despues de 32       */
+    64, 96, 128, 192, 256, 384, 512
+  };
+
   int numSizes = (int)(sizeof(sizes) / sizeof(sizes[0]));
 
   for (int si = 0; si < numSizes; si++) {
     int n = sizes[si];
     int np = nextPow2(n);
+    
     long long tc[REPS], ts[REPS];
 
-    for (int r = 0; r < REPS; r++){
-      double** A = allocMatrix(n);
-      double** B = allocMatrix(n);
+    //mismas matrices para las repeticiones
+    double** A = allocMatrix(n);
+    double** B = allocMatrix(n);
 
-      fillRandom(A, n);
-      fillRandom(B, n);
+    fillRandom(A, n);
+    fillRandom(B, n);
+
+    double** C = allocMatrix(n);
+
+    double** Ap = allocMatrix(np);
+    double** Bp = allocMatrix(np);
+    double** Cs = allocMatrix(np);
+   
+
+    for (int r = 0; r < REPS; r++){
       
       //clásico
-      double** C = allocMatrix(n);
       struct timespec start, end;
       clock_gettime(CLOCK_MONOTONIC, &start);
       multiplyClassic(A, B, C, n);
       clock_gettime(CLOCK_MONOTONIC, &end);
       tc[r] = elapsed_us(start, end);
-      freeMatrix(C, n);
 
-      //strassen con padding a potencia de 2
-      double** Ap = allocMatrix(np);
-      double** Bp = allocMatrix(np);
-      double** Cs = allocMatrix(np);
+      //padding a potencia de 2
       for (int i=0;i<n;i++)
         for (int j=0;j<n;j++) { 
           Ap[i][j] = A[i][j]; 
           Bp[i][j]=B[i][j]; 
         }
-            
+
+      //strassen      
       clock_gettime(CLOCK_MONOTONIC, &start);
       strassen(Cs, Ap, Bp, np);
       clock_gettime(CLOCK_MONOTONIC, &end);
       ts[r] = elapsed_us(start, end);
-      freeMatrix(Ap,np); 
-      freeMatrix(Bp,np); 
-      freeMatrix(Cs,np);    
-
-      freeMatrix(A, n);
-      freeMatrix(B, n);
     }
+    
+    freeMatrix(Ap,np);
+    freeMatrix(Bp,np);
+    freeMatrix(Cs,np);
+
+    freeMatrix(A, n);
+    freeMatrix(B, n);
+    freeMatrix(C, n);
+
     printf("%d %lld %lld\n", n, mediana(tc,REPS), mediana(ts,REPS));
   }
 
