@@ -6,6 +6,8 @@
 
 #define BASE_CASE 32
 
+#define REPS 15
+
 // MATRIZ
 double** allocMatrix(int n) {
   double** M = malloc(n * sizeof(double*));
@@ -25,6 +27,37 @@ void fillRandom(double** M, int n) {
     for (int j = 0; j < n; j++)
       M[i][j] = (double)(rand() % 201) - 100.0;  // rango [-100, 100]
 }
+
+//MERGE SORT como ordenamiento
+static void merge(long long *arr, long long *tmp, int left, int mid, int right) {
+  int i = left, j = mid, k = left;
+  while (i < mid && j < right)
+    tmp[k++] = (arr[i] <= arr[j]) ? arr[i++] : arr[j++];
+  while (i < mid)   tmp[k++] = arr[i++];
+  while (j < right) tmp[k++] = arr[j++];
+  memcpy(arr + left, tmp + left, (right - left) * sizeof(long long));
+}
+
+static void mergeSortRec(long long *arr, long long *tmp, int left, int right) {
+  if (right - left <= 1) return;
+  int mid = left + (right - left) / 2;
+  mergeSortRec(arr, tmp, left, mid);
+  mergeSortRec(arr, tmp, mid, right);
+  merge(arr, tmp, left, mid, right);
+}
+
+static void mergeSort(long long *arr, int n) {
+  long long *tmp = malloc(n * sizeof(long long));
+  if (!tmp) { fputs("sin memoria\n", stderr); exit(1); }
+  mergeSortRec(arr, tmp, 0, n);
+  free(tmp);
+}
+
+static long long mediana(long long *t, int reps) {
+  mergeSort(t, reps);
+  return t[reps / 2];
+}
+
 
 // MULTIPLICACIÓN clásica 
 void multiplyClassic(double** A, double** B, double** C, int n) {
@@ -201,42 +234,46 @@ int main(void) {
   for (int si = 0; si < numSizes; si++) {
     int n = sizes[si];
     int np = nextPow2(n);
+    long long tc[REPS], ts[REPS];
 
-    double** A = allocMatrix(n);
-    double** B = allocMatrix(n);
-    double** C = allocMatrix(n);
+    for (int r = 0; r < REPS; r++){
+      double** A = allocMatrix(n);
+      double** B = allocMatrix(n);
 
-    fillRandom(A, n);
-    fillRandom(B, n);
+      fillRandom(A, n);
+      fillRandom(B, n);
+      
+      //clásico
+      double** C = allocMatrix(n);
+      struct timespec start, end;
+      clock_gettime(CLOCK_MONOTONIC, &start);
+      multiplyClassic(A, B, C, n);
+      clock_gettime(CLOCK_MONOTONIC, &end);
+      tc[r] = elapsed_us(start, end);
+      freeMatrix(C, n);
 
-    struct timespec start, end, s, e;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    multiplyClassic(A, B, C, n);
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    
-    freeMatrix(C, n);
-
-    double** Ap = allocMatrix(np);
-    double** Bp = allocMatrix(np);
-    double** Cs = allocMatrix(np);
-    for (int i=0;i<n;i++)
-      for (int j=0;j<n;j++) { 
-        Ap[i][j] = A[i][j]; 
-        Bp[i][j]=B[i][j]; 
-      }
+      //strassen con padding a potencia de 2
+      double** Ap = allocMatrix(np);
+      double** Bp = allocMatrix(np);
+      double** Cs = allocMatrix(np);
+      for (int i=0;i<n;i++)
+        for (int j=0;j<n;j++) { 
+          Ap[i][j] = A[i][j]; 
+          Bp[i][j]=B[i][j]; 
+        }
             
-    clock_gettime(CLOCK_MONOTONIC, &s);
-    strassen(Cs, Ap, Bp, np);
-    clock_gettime(CLOCK_MONOTONIC, &e);
-    
-    freeMatrix(Ap,np); 
-    freeMatrix(Bp,np); 
-    freeMatrix(Cs,np);    
+      clock_gettime(CLOCK_MONOTONIC, &start);
+      strassen(Cs, Ap, Bp, np);
+      clock_gettime(CLOCK_MONOTONIC, &end);
+      ts[r] = elapsed_us(start, end);
+      freeMatrix(Ap,np); 
+      freeMatrix(Bp,np); 
+      freeMatrix(Cs,np);    
 
-    printf("%d %lld %lld\n", n, elapsed_us(start, end), elapsed_us(s, e));
-
-    freeMatrix(A, n);
-    freeMatrix(B, n); 
+      freeMatrix(A, n);
+      freeMatrix(B, n);
+    }
+    printf("%d %lld %lld\n", n, mediana(tc,REPS), mediana(ts,REPS));
   }
 
   return 0;
