@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 
-#define BASE_CASE 32
+#define BASE_CASE 64 
 
 #define REPS 15
 
@@ -268,6 +268,9 @@ int main(void) {
       resetMatrix(C, n);
       resetMatrix(Cs, np);
 
+      resetMatrix(Ap, np);
+      resetMatrix(Bp, np);
+
       //clásico
       struct timespec start, end;
       clock_gettime(CLOCK_MONOTONIC, &start);
@@ -279,7 +282,7 @@ int main(void) {
       for (int i=0;i<n;i++)
         for (int j=0;j<n;j++) { 
           Ap[i][j] = A[i][j]; 
-          Bp[i][j]=B[i][j]; 
+          Bp[i][j] = B[i][j]; 
         }
 
       //strassen      
