@@ -22,6 +22,11 @@ void freeMatrix(double** M, int n) {
   free(M);
 }
 
+static void resetMatrix(double ** M, int n) {
+  for (int i = 0; i < n; i++)
+    memset(M[i], 0, n * sizeof(double));
+}
+
 void fillRandom(double** M, int n) {
   for (int i = 0; i < n; i++)
     for (int j = 0; j < n; j++)
@@ -260,6 +265,9 @@ int main(void) {
 
     for (int r = 0; r < REPS; r++){
       
+      resetMatrix(C, n);
+      resetMatrix(Cs, np);
+
       //clásico
       struct timespec start, end;
       clock_gettime(CLOCK_MONOTONIC, &start);
