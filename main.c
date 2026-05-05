@@ -22,11 +22,6 @@ void freeMatrix(double** M, int n) {
   free(M);
 }
 
-static void resetMatrix(double ** M, int n) {
-  for (int i = 0; i < n; i++)
-    memset(M[i], 0, n * sizeof(double));
-}
-
 void fillRandom(double** M, int n) {
   for (int i = 0; i < n; i++)
     for (int j = 0; j < n; j++)
@@ -238,7 +233,7 @@ int main(void) {
     16, 20, 24, 28,        /* antes de 32              */
     32,                    /* umbral sugerido MIT       */
     36, 40, 44, 48,        /* justo despues de 32       */
-    64, 96, 128, 192, 256, 384, 512
+    64, 96, 128, 192, 256, 384, 512, 1024, 2048
   };
 
   int numSizes = (int)(sizeof(sizes) / sizeof(sizes[0]));
@@ -249,27 +244,17 @@ int main(void) {
     
     long long tc[REPS], ts[REPS];
 
-    //mismas matrices para las repeticiones
-    double** A = allocMatrix(n);
-    double** B = allocMatrix(n);
-
-    fillRandom(A, n);
-    fillRandom(B, n);
-
-    double** C = allocMatrix(n);
-
-    double** Ap = allocMatrix(np);
-    double** Bp = allocMatrix(np);
-    double** Cs = allocMatrix(np);
-   
-
     for (int r = 0; r < REPS; r++){
       
-      resetMatrix(C, n);
-      resetMatrix(Cs, np);
+      double ** A = allocMatrix(n);
+      double ** B = allocMatrix(n);
+      double ** C = allocMatrix(n);
+      double ** Ap = allocMatrix(np);
+      double ** Bp = allocMatrix(np);
+      double ** Cs = allocMatrix(np);
 
-      resetMatrix(Ap, np);
-      resetMatrix(Bp, np);
+      fillRandom(A, n);
+      fillRandom(B, n);
 
       //clásico
       struct timespec start, end;
@@ -290,16 +275,16 @@ int main(void) {
       strassen(Cs, Ap, Bp, np);
       clock_gettime(CLOCK_MONOTONIC, &end);
       ts[r] = elapsed_us(start, end);
-    }
     
-    freeMatrix(Ap,np);
-    freeMatrix(Bp,np);
-    freeMatrix(Cs,np);
+      freeMatrix(Ap,np);
+      freeMatrix(Bp,np);
+      freeMatrix(Cs,np);
 
-    freeMatrix(A, n);
-    freeMatrix(B, n);
-    freeMatrix(C, n);
+      freeMatrix(A, n);
+      freeMatrix(B, n);
+      freeMatrix(C, n);
 
+    }
     printf("%d %lld %lld\n", n, mediana(tc,REPS), mediana(ts,REPS));
   }
 
