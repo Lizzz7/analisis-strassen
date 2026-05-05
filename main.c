@@ -6,7 +6,7 @@
 
 #define BASE_CASE 64 
 
-#define REPS 15
+#define REPS 30
 
 // MATRIZ
 double** allocMatrix(int n) {
