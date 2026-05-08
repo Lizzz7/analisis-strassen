@@ -6,7 +6,7 @@
 
 #define BASE_CASE 64 
 
-#define REPS 30
+#define REPS 15
 
 // MATRIZ
 double** allocMatrix(int n) {
@@ -228,13 +228,7 @@ int main(void) {
   printf("Multiplicacion clasica vs Strassen\n");
   printf("n tiempo_us strassen_us\n");
 
-  int sizes[] = {
-    2, 4, 8,
-    16, 20, 24, 28,        /* antes de 32              */
-    32,                    /* umbral sugerido MIT       */
-    36, 40, 44, 48,        /* justo despues de 32       */
-    64, 96, 128, 192, 256, 384, 512, 1024, 2048
-  };
+  int sizes[] = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 };
 
   int numSizes = (int)(sizeof(sizes) / sizeof(sizes[0]));
 
